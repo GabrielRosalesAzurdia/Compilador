@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import java.util.Set;
 import java.util.regex.*;
 
 public class LexicalAnalyzer extends JFrame {
@@ -55,17 +56,34 @@ public class LexicalAnalyzer extends JFrame {
         String text = textArea.getText();
         tokensArea.setText("");
 
-        String tokenPatterns = "(?<ID>[a-zA-Z_][a-zA-Z0-9_]*)|" +
-                "(?<NUM>\\d+)|" +
-                "(?<STRING>\".*?\")|" +
-                "(?<OP>[+\\-*/=<>!&|{}();,])";
+        // Lista de palabras reservadas en Java
+        Set<String> keywords = getStrings();
+
+        // Expresión regular mejorada
+        String tokenPatterns = "(?<KEYWORD>\\b(?:abstract|assert|boolean|break|byte|case|catch|char|class|const|"
+                + "continue|default|do|double|else|enum|extends|final|finally|float|for|goto|if|implements|import|"
+                + "instanceof|int|interface|long|native|new|package|private|protected|public|return|short|static|"
+                + "strictfp|super|switch|synchronized|this|throw|throws|transient|try|void|volatile|while|String)\\b)|"
+                + "(?<ID>[a-zA-Z_][a-zA-Z0-9_]*)|"
+                + "(?<NUM>\\d+(\\.\\d+)?)|"
+                + "(?<STRING>\"(\\\\.|[^\"])*\")|"
+                + "(?<OP>[+\\-*/=<>!&|{}();,])";
+
         Pattern pattern = Pattern.compile(tokenPatterns);
         Matcher matcher = pattern.matcher(text);
 
         int tokenCount = 1;
         while (matcher.find()) {
-            if (matcher.group("ID") != null) {
-                tokensArea.append("TOKEN " + tokenCount++ + " - ID: " + matcher.group("ID") + "\n");
+            if (matcher.group("KEYWORD") != null) {
+                tokensArea.append("TOKEN " + tokenCount++ + " - KEYWORD: " + matcher.group("KEYWORD") + "\n");
+            } else if (matcher.group("ID") != null) {
+                // Verificar si es palabra reservada
+                String identifier = matcher.group("ID");
+                if (keywords.contains(identifier)) {
+                    tokensArea.append("TOKEN " + tokenCount++ + " - KEYWORD: " + identifier + "\n");
+                } else {
+                    tokensArea.append("TOKEN " + tokenCount++ + " - ID: " + identifier + "\n");
+                }
             } else if (matcher.group("NUM") != null) {
                 tokensArea.append("TOKEN " + tokenCount++ + " - NUM: " + matcher.group("NUM") + "\n");
             } else if (matcher.group("STRING") != null) {
@@ -74,6 +92,20 @@ public class LexicalAnalyzer extends JFrame {
                 tokensArea.append("TOKEN " + tokenCount++ + " - OP: " + matcher.group("OP") + "\n");
             }
         }
+    }
+
+    private static Set<String> getStrings() {
+        String[] keywordsArray = {
+                "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const",
+                "continue", "default", "do", "double", "else", "enum", "extends", "final", "finally", "float",
+                "for", "goto", "if", "implements", "import", "instanceof", "int", "interface", "long", "native",
+                "new", "package", "private", "protected", "public", "return", "short", "static", "strictfp",
+                "super", "switch", "synchronized", "this", "throw", "throws", "transient", "try", "void",
+                "volatile", "while", "String"
+        };
+
+        // Convertir a un conjunto para búsqueda rápida
+        return new java.util.HashSet<>(java.util.Arrays.asList(keywordsArray));
     }
 
     public static void main(String[] args) {
