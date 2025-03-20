@@ -8,6 +8,9 @@ public class LexicalAnalyzer extends JFrame {
     final private JTextArea textArea;
     final private JTextArea tokensArea;
     final private JFileChooser fileChooser;
+    private final SymbolTable symbolTable = new SymbolTable();
+    private final JTextArea symbolTableArea = new JTextArea();
+
 
     public LexicalAnalyzer() {
         setTitle("Analizador Léxico");
@@ -26,8 +29,11 @@ public class LexicalAnalyzer extends JFrame {
         tokensArea = new JTextArea();
         textArea.setEditable(false);
         tokensArea.setEditable(false);
+        symbolTableArea.setEditable(false);
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(textArea), new JScrollPane(tokensArea));
+        JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, splitPane, new JScrollPane(symbolTableArea));
         add(splitPane, BorderLayout.CENTER);
+        add(mainSplitPane, BorderLayout.CENTER);
 
         fileChooser = new JFileChooser();
 
@@ -83,6 +89,9 @@ public class LexicalAnalyzer extends JFrame {
                     tokensArea.append("TOKEN " + tokenCount++ + " - KEYWORD: " + identifier + "\n");
                 } else {
                     tokensArea.append("TOKEN " + tokenCount++ + " - ID: " + identifier + "\n");
+                    if (!symbolTable.contains(identifier)) {
+                        symbolTable.addSymbol(identifier, "Desconocido", "Global", "Variable");
+                    }
                 }
             } else if (matcher.group("NUM") != null) {
                 tokensArea.append("TOKEN " + tokenCount++ + " - NUM: " + matcher.group("NUM") + "\n");
@@ -92,6 +101,7 @@ public class LexicalAnalyzer extends JFrame {
                 tokensArea.append("TOKEN " + tokenCount++ + " - OP: " + matcher.group("OP") + "\n");
             }
         }
+        symbolTableArea.setText(symbolTable.toString());
     }
 
     private static Set<String> getStrings() {
